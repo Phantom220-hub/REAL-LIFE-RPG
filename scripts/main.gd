@@ -234,6 +234,17 @@ func _build_daily() -> void:
 	var rest := _button("ВЫБРАТЬ ДЕНЬ ОТДЫХА (+5 МОНЕТ)", "#263b59", _claim_rest)
 	rest.disabled = game_state.daily_choice_claimed
 	card.add_child(rest)
+	var story_card := _card(page_box)
+	story_card.add_child(_label("СЮЖЕТНАЯ ЛИНИЯ", 17, "#f2c66d"))
+	story_card.add_child(_label(game_state.story_quest_title(), 16, "#ffffff"))
+	story_card.add_child(_label(game_state.story_quest_description(), 14, "#b9c9df"))
+	if game_state.story_quest_stage < 6:
+		var quest_button := _button("ЗАВЕРШИТЬ ГЛАВУ (+15 МОНЕТ, +10 XP)", "#75433c")
+		quest_button.disabled = not game_state.story_quest_ready()
+		quest_button.pressed.connect(_claim_story_quest)
+		story_card.add_child(quest_button)
+	else:
+		story_card.add_child(_label("ОСНОВНАЯ ИСТОРИЯ ПРОЙДЕНА", 14, "#75d5c8"))
 	var xp_card := _card(page_box)
 	xp_card.add_child(_label("БЕЗОПАСНЫЙ ПРОГРЕСС", 15, "#f2c66d"))
 	xp_card.add_child(_label("За ручную запись активности можно получить не более %d XP в день. Игровой прогресс не требует ежедневных тренировок. Восстановление — полноценная часть приключения." % game_state.DAILY_XP_CAP, 14, "#b9c9df"))
@@ -413,3 +424,10 @@ func _refresh_header() -> void:
 		level_label.text = "УРОВЕНЬ %d" % game_state.level
 	if status_label != null and game_state.last_message != "":
 		status_label.text = game_state.last_message
+
+func _claim_story_quest() -> void:
+	if game_state.claim_story_quest():
+		status_label.text = game_state.last_message
+	else:
+		status_label.text = "Сначала выполни условие текущей главы."
+	_show_page("daily")
