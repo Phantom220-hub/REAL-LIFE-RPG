@@ -57,6 +57,8 @@ func _build_shell() -> void:
 	_add_nav_button(nav, "⚔   Приключение", "adventure")
 	_add_nav_button(nav, "▣   Инвентарь", "inventory")
 	_add_nav_button(nav, "✧   Задания", "daily")
+	_add_nav_button(nav, "⌖   Карта мира", "map")
+	_add_nav_button(nav, "★   Достижения", "achievements")
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	nav.add_child(spacer)
@@ -105,6 +107,8 @@ func _show_page(page: String) -> void:
 		"adventure": _build_adventure()
 		"inventory": _build_inventory()
 		"daily": _build_daily()
+		"map": _build_map()
+		"achievements": _build_achievements()
 		_: _build_home()
 
 func _build_home() -> void:
@@ -169,6 +173,7 @@ func _build_training() -> void:
 
 func _build_adventure() -> void:
 	page_box.add_child(_label("ПРИКЛЮЧЕНИЕ", 27, "#f2c66d"))
+	page_box.add_child(_label("Текущая локация: %s" % game_state.LOCATIONS[game_state.current_location]["name"], 15, "#75d5c8"))
 	if game_state.battle_active:
 		var battle := _card(page_box)
 		var enemy: Dictionary = game_state.ENEMIES[game_state.enemy_id]
@@ -231,6 +236,42 @@ func _build_daily() -> void:
 	xp_card.add_child(_label("БЕЗОПАСНЫЙ ПРОГРЕСС", 15, "#f2c66d"))
 	xp_card.add_child(_label("За ручную запись активности можно получить не более %d XP в день. Игровой прогресс не требует ежедневных тренировок. Восстановление — полноценная часть приключения." % game_state.DAILY_XP_CAP, 14, "#b9c9df"))
 
+
+func _build_map() -> void:
+	page_box.add_child(_label("КАРТА МИРА", 27, "#f2c66d"))
+	page_box.add_child(_label("Исследуй новые места. Некоторые области откроются только после роста уровня.", 14, "#9aabc4"))
+	for id in ["village", "forest", "marsh", "tower"]:
+		var location: Dictionary = game_state.LOCATIONS[id]
+		var required: int = int(location["level"])
+		var unlocked: bool = game_state.level >= required
+		var visited: bool = game_state.visited_locations.has(id)
+		var card := _card(page_box)
+		var marker := " • ПОСЕЩЕНО" if visited else ""
+		card.add_child(_label(str(location["name"]) + marker, 18, "#f2c66d" if unlocked else "#63738d"))
+		card.add_child(_label(str(location["description"]), 14, "#b9c9df"))
+		card.add_child(_label("Требуется уровень: %d" % required, 13, "#9aabc4"))
+		var button := _button("ТЫ ЗДЕСЬ" if game_state.current_location == id else "ОТПРАВИТЬСЯ", "#28665f" if unlocked else "#263b59")
+		button.disabled = not unlocked or game_state.current_location == id
+		button.pressed.connect(_travel_to.bind(id))
+		card.add_child(button)
+
+func _build_achievements() -> void:
+	page_box.add_child(_label("ДОСТИЖЕНИЯ", 27, "#f2c66d"))
+	page_box.add_child(_label("Открывай награды в своём темпе. За пропуск дней нет штрафов.", 14, "#9aabc4"))
+	for id in ["first_activity", "first_win", "explorer", "boss", "level_five", "rest_three"]:
+		var achievement: Dictionary = game_state.ACHIEVEMENTS[id]
+		var unlocked: bool = game_state.is_achievement_unlocked(id)
+		var claimed: bool = bool(game_state.claimed_achievements.get(id, false))
+		var card := _card(page_box)
+		card.add_child(_label(str(achievement["name"]), 17, "#f2c66d" if unlocked else "#7d8ba2"))
+		card.add_child(_label(str(achievement["description"]), 14, "#b9c9df"))
+		var state_text := "НАГРАДА ПОЛУЧЕНА" if claimed else ("ДОСТУПНО: +10 МОНЕТ" if unlocked else "ЕЩЁ НЕ ОТКРЫТО")
+		card.add_child(_label(state_text, 13, "#75d5c8" if unlocked else "#63738d"))
+		var button := _button("ПОЛУЧИТЬ НАГРАДУ", "#28665f")
+		button.disabled = not unlocked or claimed
+		button.pressed.connect(_claim_achievement.bind(id))
+		card.add_child(button)
+
 func _card(parent: Node) -> VBoxContainer:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
@@ -274,6 +315,21 @@ func _button(caption: String, color: String, callback: Callable = Callable()) ->
 	if callback.is_valid():
 		button.pressed.connect(callback)
 	return button
+
+
+func _travel_to(id: String) -> void:
+	if game_state.travel_to_location(id):
+		status_label.text = game_state.last_message
+	else:
+		status_label.text = game_state.last_message
+	_show_page("map")
+
+func _claim_achievement(id: String) -> void:
+	if game_state.claim_achievement(id):
+		status_label.text = game_state.last_message
+	else:
+		status_label.text = "Достижение пока недоступно или награда уже получена."
+	_show_page("achievements")
 
 func _on_workout_pressed() -> void:
 	if reps_input == null:
