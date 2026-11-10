@@ -31,6 +31,7 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     @Volatile private var latestLandmarks: ArrayList<HashMap<String, Any>> = arrayListOf()
     @Volatile private var running = false
+    @Volatile private var requestActive = false
     private var cameraProvider: ProcessCameraProvider? = null
     private var previewView: PreviewView? = null
     private var detector: PoseDetector? = null
@@ -49,8 +50,9 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
             ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.CAMERA), 7401)
             return false
         }
-        if (running) return true
-        val owner = activity as? LifecycleOwner ?: return false
+        if (running || requestActive) return true
+        requestActive = true
+        val owner = activity as? LifecycleOwner ?: run { requestActive = false; return false }
 
         val options = PoseDetectorOptions.Builder()
             .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
@@ -70,6 +72,12 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
 
         val providerFuture = ProcessCameraProvider.getInstance(activity)
         providerFuture.addListener({
+            if (!requestActive) {
+                detector?.close()
+                detector = null
+                removePreview()
+                return@addListener
+            }
             try {
                 val provider = providerFuture.get()
                 cameraProvider = provider
@@ -113,6 +121,9 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
                 running = true
             } catch (_: Exception) {
                 running = false
+                requestActive = false
+                detector?.close()
+                detector = null
                 removePreview()
             }
         }, ContextCompat.getMainExecutor(activity))
@@ -127,6 +138,7 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
 
     @UsedByGodot
     fun stopCamera() {
+        requestActive = false
         running = false
         latestLandmarks = arrayListOf()
         cameraProvider?.unbindAll()
@@ -140,6 +152,11 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
         val view = previewView ?: return
         (view.parent as? ViewGroup)?.removeView(view)
         previewView = null
+    }
+
+    override fun onMainPause() {
+        stopCamera()
+        super.onMainPause()
     }
 
     override fun onMainDestroy() {
