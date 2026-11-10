@@ -31,10 +31,10 @@ const ACHIEVEMENTS := {
 }
 
 const ENEMIES := {
-	"scout": {"name": "Зомби-разведчик", "health": 24, "attack": 4, "coins": 8, "xp": 12, "level": 1},
-	"guard": {"name": "Каменный страж", "health": 42, "attack": 7, "coins": 15, "xp": 22, "level": 2},
-	"brute": {"name": "Болотный громила", "health": 65, "attack": 10, "coins": 25, "xp": 35, "level": 3},
-	"ancient_guardian": {"name": "Древний страж — БОСС", "health": 110, "attack": 12, "coins": 60, "xp": 70, "level": 5}
+	"scout": {"name": "Зомби-разведчик", "health": 24, "attack": 4, "coins": 8, "xp": 12, "level": 1, "location": "village"},
+	"guard": {"name": "Каменный страж", "health": 42, "attack": 7, "coins": 15, "xp": 22, "level": 2, "location": "forest"},
+	"brute": {"name": "Болотный громила", "health": 65, "attack": 10, "coins": 25, "xp": 35, "level": 3, "location": "marsh"},
+	"ancient_guardian": {"name": "Древний страж — БОСС", "health": 110, "attack": 12, "coins": 60, "xp": 70, "level": 5, "location": "tower"}
 }
 
 var player_name: String = "Путник"
@@ -43,6 +43,7 @@ var xp: int = 0
 var total_reps: int = 0
 var coins: int = 0
 var defeated_enemies: int = 0
+var defeated_by_enemy: Dictionary = {"scout": 0, "guard": 0, "brute": 0, "ancient_guardian": 0}
 var bosses_defeated: int = 0
 var rest_days_total: int = 0
 var visited_locations: Array = ["village"]
@@ -117,6 +118,9 @@ func start_battle(id: String) -> bool:
 	if level < int(ENEMIES[id]["level"]):
 		last_message = "Для этой встречи нужен уровень %d." % ENEMIES[id]["level"]
 		return false
+	if current_location != str(ENEMIES[id]["location"]):
+		last_message = "Этот противник находится в локации: %s." % LOCATIONS[ENEMIES[id]["location"]]["name"]
+		return false
 	if battle_active:
 		return false
 	enemy_id = id
@@ -153,6 +157,7 @@ func _finish_battle() -> void:
 	var enemy: Dictionary = ENEMIES[enemy_id]
 	coins += int(enemy["coins"])
 	defeated_enemies += 1
+	defeated_by_enemy[enemy_id] = int(defeated_by_enemy.get(enemy_id, 0)) + 1
 	if enemy_id == "ancient_guardian":
 		bosses_defeated += 1
 	_add_xp(int(enemy["xp"]))
@@ -285,11 +290,11 @@ func story_quest_description() -> String:
 
 func story_quest_ready() -> bool:
 	match story_quest_stage:
-		0: return defeated_enemies >= 1
+		0: return int(defeated_by_enemy.get("scout", 0)) >= 1
 		1: return visited_locations.has("forest")
-		2: return defeated_enemies >= 2
+		2: return int(defeated_by_enemy.get("guard", 0)) >= 1
 		3: return visited_locations.has("marsh")
-		4: return defeated_enemies >= 3
+		4: return int(defeated_by_enemy.get("brute", 0)) >= 1
 		5: return bosses_defeated >= 1
 	return false
 
@@ -312,6 +317,7 @@ func save_progress() -> void:
 	config.set_value("player", "total_reps", total_reps)
 	config.set_value("player", "coins", coins)
 	config.set_value("player", "defeated_enemies", defeated_enemies)
+	config.set_value("player", "defeated_by_enemy", defeated_by_enemy)
 	config.set_value("player", "bosses_defeated", bosses_defeated)
 	config.set_value("player", "rest_days_total", rest_days_total)
 	config.set_value("world", "visited_locations", visited_locations)
@@ -340,10 +346,13 @@ func load_progress() -> void:
 	total_reps = maxi(0, int(config.get_value("player", "total_reps", 0)))
 	coins = maxi(0, int(config.get_value("player", "coins", 0)))
 	defeated_enemies = maxi(0, int(config.get_value("player", "defeated_enemies", 0)))
+	defeated_by_enemy = config.get_value("player", "defeated_by_enemy", defeated_by_enemy)
 	bosses_defeated = maxi(0, int(config.get_value("player", "bosses_defeated", 0)))
 	rest_days_total = maxi(0, int(config.get_value("player", "rest_days_total", 0)))
 	visited_locations = config.get_value("world", "visited_locations", visited_locations)
 	current_location = str(config.get_value("world", "current_location", current_location))
+	if not LOCATIONS.has(current_location):
+		current_location = "village"
 	claimed_achievements = config.get_value("achievements", "claimed", claimed_achievements)
 	total_workout_sessions = maxi(0, int(config.get_value("player", "total_workout_sessions", 0)))
 	daily_xp = clampi(int(config.get_value("player", "daily_xp", 0)), 0, DAILY_XP_CAP)
