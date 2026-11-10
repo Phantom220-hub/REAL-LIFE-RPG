@@ -7,10 +7,10 @@ const XP_PER_LEVEL := 100
 const DAILY_XP_CAP := 25
 
 const ITEMS := {
-	"wood_sword": {"name": "Деревянный меч", "type": "weapon", "attack": 2, "defense": 0, "price": 0},
-	"iron_sword": {"name": "Железный меч", "type": "weapon", "attack": 5, "defense": 0, "price": 35},
-	"cloth_armor": {"name": "Походная куртка", "type": "armor", "attack": 0, "defense": 1, "price": 0},
-	"leather_armor": {"name": "Кожаная броня", "type": "armor", "attack": 0, "defense": 3, "price": 30},
+	"focus_charm": {"name": "Кристалл фокуса", "type": "focus", "attack": 2, "defense": 0, "price": 0},
+	"sun_core": {"name": "Солнечное ядро", "type": "focus", "attack": 5, "defense": 0, "price": 35},
+	"travel_cloak": {"name": "Плащ путешественника", "type": "armor", "attack": 0, "defense": 1, "price": 0},
+	"guardian_vest": {"name": "Жилет стража", "type": "armor", "attack": 0, "defense": 3, "price": 30},
 	"potion": {"name": "Зелье лечения", "type": "consumable", "heal": 25, "price": 12}
 }
 
@@ -32,9 +32,9 @@ var daily_reps: int = 0
 var daily_date: String = ""
 var daily_choice_claimed: bool = false
 var daily_choice_text: String = "Ещё не выбрано"
-var inventory: Dictionary = {"wood_sword": 1, "cloth_armor": 1, "potion": 2}
-var equipped_weapon: String = "wood_sword"
-var equipped_armor: String = "cloth_armor"
+var inventory: Dictionary = {"focus_charm": 1, "travel_cloak": 1, "potion": 2}
+var equipped_focus: String = "focus_charm"
+var equipped_armor: String = "travel_cloak"
 var enemy_id: String = ""
 var enemy_health: int = 0
 var player_health: int = 100
@@ -46,8 +46,8 @@ func _ready() -> void:
 	_refresh_day()
 
 func attack_power() -> int:
-	var weapon_bonus: int = int(ITEMS.get(equipped_weapon, {}).get("attack", 0))
-	return 5 + level + weapon_bonus
+	var focus_bonus: int = int(ITEMS.get(equipped_focus, {}).get("attack", 0))
+	return 5 + level + focus_bonus
 
 func defense_power() -> int:
 	var armor_bonus: int = int(ITEMS.get(equipped_armor, {}).get("defense", 0))
@@ -157,8 +157,8 @@ func equip_item(id: String) -> bool:
 	if not ITEMS.has(id) or int(inventory.get(id, 0)) <= 0:
 		return false
 	var kind: String = str(ITEMS[id]["type"])
-	if kind == "weapon":
-		equipped_weapon = id
+	if kind == "focus":
+		equipped_focus = id
 	elif kind == "armor":
 		equipped_armor = id
 	else:
@@ -199,7 +199,7 @@ func save_progress() -> void:
 	config.set_value("daily", "choice_claimed", daily_choice_claimed)
 	config.set_value("daily", "choice_text", daily_choice_text)
 	config.set_value("inventory", "items", inventory)
-	config.set_value("equipment", "weapon", equipped_weapon)
+	config.set_value("equipment", "focus", equipped_focus)
 	config.set_value("equipment", "armor", equipped_armor)
 	config.set_value("player", "player_health", player_health)
 	config.save(SAVE_PATH)
@@ -221,7 +221,7 @@ func load_progress() -> void:
 	daily_choice_claimed = bool(config.get_value("daily", "choice_claimed", false))
 	daily_choice_text = str(config.get_value("daily", "choice_text", "Ещё не выбрано"))
 	inventory = config.get_value("inventory", "items", inventory)
-	equipped_weapon = str(config.get_value("equipment", "weapon", equipped_weapon))
+	equipped_focus = str(config.get_value("equipment", "focus", equipped_focus))
 	equipped_armor = str(config.get_value("equipment", "armor", equipped_armor))
 	player_health = clampi(int(config.get_value("player", "player_health", max_health())), 0, max_health())
 	_refresh_day()
