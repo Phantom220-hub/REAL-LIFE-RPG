@@ -12,7 +12,13 @@ The intended Android implementation uses the **bundled** Google ML Kit Pose Dete
 - `scripts/offline_camera_session.gd` is the GDScript adapter for the future native Android plugin singleton `RealLifePoseCamera`. It does not make network requests and safely reports when the native plugin is absent.
 - The adapter is not itself a camera driver. A native Android AAR must still be built and packaged before camera capture works in an APK.
 
-## Native Android integration still required
+## Android plugin source added
+
+The repository now contains an Android library module at `android/posecamera` with CameraX Preview + ImageAnalysis, a bundled ML Kit Pose Detection dependency in STREAM_MODE, a local landmark bridge, a camera permission request, and a preview overlay. The GDScript adapter polls the plugin locally and the training page now has camera start/stop/session controls. Confirmed repetitions are saved to the existing activity system; during an active encounter each confirmed repetition contributes one point of game damage (session damage is capped at 100).
+
+The export addon is enabled in `project.godot`. CI now attempts to compile the Android AAR and upload it as an artifact. For a local Android export, the resulting `posecamera-release.aar` must be copied to `addons/pose_camera/bin/posecamera-release.aar`.
+
+## Remaining Android integration and verification
 
 - Godot 4.7.2 Android Gradle build and Android plugin v2.
 - CameraX Preview + ImageAnalysis, runtime camera permission, and pause/resume lifecycle handling.
