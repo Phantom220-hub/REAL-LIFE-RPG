@@ -11,7 +11,7 @@ An offline-first, landscape mobile RPG prototype where real-world activity can c
 - Inventory, equipable fantasy focus artifacts and protective clothing, a small shop and healing items.
 - Daily choice between an activity check-in and a rest day; both give the same small reward.
 - Daily XP cap for manual activity records.
-- Four level-gated world locations and claimable achievements.
+- Four level-gated world locations, location-specific encounters, six story chapters and claimable achievements.
 
 ## Run in Godot
 1. Open this repository in Godot 4.7.2.
@@ -20,7 +20,7 @@ An offline-first, landscape mobile RPG prototype where real-world activity can c
 
 ## Current limitations
 - Exercise entry is manual. Camera preview, Android camera permission and offline pose estimation are **not implemented**.
-- Story quest chains, dedicated location scenes, full character animations and accessibility settings remain future work.
+- Story chapters currently use milestone-based progression; dedicated illustrated location scenes, full character animations, accessibility settings and sound design remain future work.
 - GitHub Actions headless validation has succeeded on the main gameplay revision. The latest small daily-refresh update is being checked; physical Android testing and APK export remain outstanding.
 
 All progression is local. Any future camera feature must process frames on-device and must not upload or store video. The game should encourage sustainable activity and recovery, not excessive exercise.
