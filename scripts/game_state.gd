@@ -15,9 +15,10 @@ const ITEMS := {
 }
 
 const ENEMIES := {
-	"scout": {"name": "Зомби-разведчик", "health": 24, "attack": 4, "coins": 8, "xp": 12},
-	"guard": {"name": "Костяной страж", "health": 42, "attack": 7, "coins": 15, "xp": 22},
-	"brute": {"name": "Болотный громила", "health": 65, "attack": 10, "coins": 25, "xp": 35}
+	"scout": {"name": "Зомби-разведчик", "health": 24, "attack": 4, "coins": 8, "xp": 12, "level": 1},
+	"guard": {"name": "Каменный страж", "health": 42, "attack": 7, "coins": 15, "xp": 22, "level": 2},
+	"brute": {"name": "Болотный громила", "health": 65, "attack": 10, "coins": 25, "xp": 35, "level": 3},
+	"ancient_guardian": {"name": "Древний страж — БОСС", "health": 110, "attack": 12, "coins": 60, "xp": 70, "level": 5}
 }
 
 var player_name: String = "Путник"
@@ -37,7 +38,7 @@ var equipped_focus: String = "focus_charm"
 var equipped_armor: String = "travel_cloak"
 var enemy_id: String = ""
 var enemy_health: int = 0
-var player_health: int = 100
+var player_health: int = 85
 var battle_active: bool = false
 var last_message: String = "Добро пожаловать!"
 
@@ -88,6 +89,9 @@ func claim_daily_choice(is_rest_day: bool) -> bool:
 
 func start_battle(id: String) -> bool:
 	if not ENEMIES.has(id):
+		return false
+	if level < int(ENEMIES[id]["level"]):
+		last_message = "Для этой встречи нужен уровень %d." % ENEMIES[id]["level"]
 		return false
 	if battle_active:
 		return false
