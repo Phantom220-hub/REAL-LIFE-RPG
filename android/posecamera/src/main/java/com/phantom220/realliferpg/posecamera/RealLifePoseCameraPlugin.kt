@@ -17,7 +17,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseDetector
-import com.google.mlkit.vision.pose.PoseDetectorOptions
+import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
 import org.godotengine.godot.Godot
 import org.godotengine.godot.plugin.GodotPlugin
 import org.godotengine.godot.plugin.UsedByGodot
@@ -39,13 +39,15 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
     override fun getPluginName() = "RealLifePoseCamera"
 
     @UsedByGodot
-    fun hasCameraPermission(): Boolean =
-        ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) ==
+    fun hasCameraPermission(): Boolean {
+        val activity = getActivity() ?: return false
+        return ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) ==
             PackageManager.PERMISSION_GRANTED
+    }
 
     @UsedByGodot
     fun startCamera(): Boolean {
-        val activity = getActivity()
+        val activity = getActivity() ?: return false
         if (!hasCameraPermission()) {
             ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.CAMERA), 7401)
             return false
@@ -100,7 +102,7 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
                                 val height = (if (rotated) mediaImage.width else mediaImage.height).toFloat().coerceAtLeast(1f)
                                 val next = ArrayList<HashMap<String, Any>>(33)
                                 for (index in 0..32) {
-                                    val landmark = pose.getLandmark(index)
+                                    val landmark = pose.getPoseLandmark(index)
                                     if (landmark == null) {
                                         next.add(hashMapOf("x" to 0f, "y" to 0f, "confidence" to 0f))
                                     } else {
@@ -146,7 +148,7 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
         cameraProvider = null
         detector?.close()
         detector = null
-        getActivity().runOnUiThread { removePreview() }
+        getActivity()?.runOnUiThread { removePreview() }
     }
 
     private fun removePreview() {
