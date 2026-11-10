@@ -156,6 +156,7 @@ func _build_character() -> void:
 	details.add_child(_button("ОТКРЫТЬ ИНВЕНТАРЬ", "#263b59", _show_page.bind("inventory")))
 
 func _build_training() -> void:
+	game_state.refresh_daily_state()
 	page_box.add_child(_label("ТРЕНИРОВКА", 27, "#f2c66d"))
 	var card := _card(page_box)
 	card.add_child(_label("ЗАПИСЬ АКТИВНОСТИ", 17, "#ffffff"))
@@ -221,6 +222,7 @@ func _build_inventory() -> void:
 	potion_card.add_child(_button("КУПИТЬ ЗЕЛЬЕ", "#263b59", _buy_potion))
 
 func _build_daily() -> void:
+	game_state.refresh_daily_state()
 	page_box.add_child(_label("ЕЖЕДНЕВНЫЙ ВЫБОР", 27, "#f2c66d"))
 	var card := _card(page_box)
 	card.add_child(_label("Сегодня: %s" % game_state.daily_date, 16, "#ffffff"))
