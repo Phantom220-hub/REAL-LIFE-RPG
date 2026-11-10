@@ -21,7 +21,7 @@ An offline-first, landscape mobile RPG prototype where real-world activity can c
 ## Current limitations
 - Exercise entry is manual. Camera preview, Android camera permission and offline pose estimation are **not implemented**.
 - Story quest chains, dedicated location scenes, full character animations and accessibility settings remain future work.
-- The project has not yet been confirmed on a physical Android device. GitHub Actions performs a headless Godot validation run; check the Actions tab for the latest result.
+- GitHub Actions headless validation has succeeded on the main gameplay revision. The latest small daily-refresh update is being checked; physical Android testing and APK export remain outstanding.
 
 All progression is local. Any future camera feature must process frames on-device and must not upload or store video. The game should encourage sustainable activity and recovery, not excessive exercise.
 
