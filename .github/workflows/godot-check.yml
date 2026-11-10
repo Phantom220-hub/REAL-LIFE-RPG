@@ -54,3 +54,76 @@ jobs:
           name: real-life-rpg-offline-camera-aar
           path: android/posecamera/build/outputs/aar/posecamera-release.aar
           if-no-files-found: error
+
+  build-android-apk:
+    needs: [validate, build-offline-android-camera]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Download Godot 4.7.2 editor
+        run: |
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -O godot.zip
+          unzip -q godot.zip -d godot-bin
+          chmod +x godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          echo "$PWD/godot-bin" >> "$GITHUB_PATH"
+
+      - name: Install matching Godot export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          wget -q https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz -O templates.tpz
+          mkdir -p templates-unpacked
+          unzip -q templates.tpz -d templates-unpacked
+          if [ -d templates-unpacked/templates ]; then
+            cp -a templates-unpacked/templates/. "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
+          else
+            cp -a templates-unpacked/. "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
+          fi
+          test -f "$HOME/.local/share/godot/export_templates/4.7.2.stable/android_source.zip"
+
+      - name: Download offline camera AAR
+        uses: actions/download-artifact@v4
+        with:
+          name: real-life-rpg-offline-camera-aar
+          path: addons/pose_camera/bin
+
+      - name: Install Android Gradle build template
+        run: |
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --editor --quit --install-android-build-template
+          test -d android/build
+
+      - name: Export ARM64 debug APK
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+        run: |
+          mkdir -p build
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --export-debug "Android ARM64 Debug" build/REAL_LIFE_RPG-debug.apk
+          test -s build/REAL_LIFE_RPG-debug.apk
+
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: REAL-LIFE-RPG-Android-ARM64-debug
+          path: build/REAL_LIFE_RPG-debug.apk
+          if-no-files-found: error
