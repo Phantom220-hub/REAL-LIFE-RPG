@@ -19,6 +19,13 @@ class AndroidPoseExportPlugin extends EditorExportPlugin:
 	func _get_name() -> String:
 		return "RealLifePoseCamera"
 
+	func _get_android_libraries(platform: EditorExportPlatform, debug: bool) -> PackedStringArray:
+		var aar_path := "res://addons/pose_camera/bin/posecamera-release.aar"
+		if FileAccess.file_exists(aar_path):
+			return PackedStringArray(["pose_camera/bin/posecamera-release.aar"])
+		push_warning("RealLifePoseCamera AAR is missing. Build android/posecamera and copy its release AAR into addons/pose_camera/bin before exporting.")
+		return PackedStringArray()
+
 	func _get_android_dependencies(platform: EditorExportPlatform, debug: bool) -> PackedStringArray:
 		return PackedStringArray([
 			"androidx.camera:camera-core:1.4.2",
