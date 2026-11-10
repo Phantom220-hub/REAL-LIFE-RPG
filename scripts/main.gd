@@ -147,7 +147,7 @@ func _build_character() -> void:
 	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	details.add_child(_label("ХАРАКТЕРИСТИКИ", 17, "#f2c66d"))
 	details.add_child(_label("Уровень: %d\nОпыт: %d / 100\nЗдоровье: %d / %d\nАтака: %d\nЗащита: %d\nМонеты: %d\nПобеды: %d" % [game_state.level, game_state.xp, game_state.player_health, game_state.max_health(), game_state.attack_power(), game_state.defense_power(), game_state.coins, game_state.defeated_enemies], 15, "#d9e3f2"))
-	details.add_child(_label("Оружие: %s\nБроня: %s" % [game_state.ITEMS[game_state.equipped_weapon]["name"], game_state.ITEMS[game_state.equipped_armor]["name"]], 14, "#9aabc4"))
+	details.add_child(_label("Фокус: %s\nЗащита: %s" % [game_state.ITEMS[game_state.equipped_focus]["name"], game_state.ITEMS[game_state.equipped_armor]["name"]], 14, "#9aabc4"))
 	details.add_child(_button("ОТДОХНУТЬ И ВОССТАНОВИТЬСЯ", "#28665f", _recover))
 	details.add_child(_button("ОТКРЫТЬ ИНВЕНТАРЬ", "#263b59", _show_page.bind("inventory")))
 
@@ -174,7 +174,7 @@ func _build_adventure() -> void:
 		var enemy: Dictionary = game_state.ENEMIES[game_state.enemy_id]
 		battle.add_child(_label("БОЙ: %s" % enemy["name"], 20, "#f2c66d"))
 		battle.add_child(_label("Здоровье врага: %d / %d\nТвоё здоровье: %d / %d" % [game_state.enemy_health, enemy["health"], game_state.player_health, game_state.max_health()], 16, "#d9e3f2"))
-		battle.add_child(_button("АТАКОВАТЬ", "#75433c", _player_attack))
+		battle.add_child(_button("ЭНЕРГЕТИЧЕСКИЙ ИМПУЛЬС", "#75433c", _player_attack))
 		battle.add_child(_button("ИСПОЛЬЗОВАТЬ ЗЕЛЬЕ (%d)" % int(game_state.inventory.get("potion", 0)), "#28665f", _use_potion))
 	else:
 		page_box.add_child(_label("Выбери противника. Победа зависит от характеристик и экипировки героя.", 14, "#9aabc4"))
@@ -183,7 +183,7 @@ func _build_adventure() -> void:
 			var card := _card(page_box)
 			card.add_child(_label(str(enemy["name"]), 18, "#ffffff"))
 			card.add_child(_label("Здоровье: %d • Атака: %d • Награда: %d монет, %d XP" % [enemy["health"], enemy["attack"], enemy["coins"], enemy["xp"]], 14, "#9aabc4"))
-			var button := _button("НАЧАТЬ БОЙ", "#75433c")
+			var button := _button("НАЧАТЬ ВСТРЕЧУ", "#75433c")
 			button.pressed.connect(_start_battle.bind(id))
 			card.add_child(button)
 	var tip := _card(page_box)
@@ -194,13 +194,13 @@ func _build_inventory() -> void:
 	page_box.add_child(_label("ИНВЕНТАРЬ И МАГАЗИН", 27, "#f2c66d"))
 	var equipped := _card(page_box)
 	equipped.add_child(_label("СЕЙЧАС ЭКИПИРОВАНО", 16, "#f2c66d"))
-	equipped.add_child(_label("Оружие: %s (+%d атаки)\nБроня: %s (+%d защиты)\nЗелья: %d" % [game_state.ITEMS[game_state.equipped_weapon]["name"], game_state.ITEMS[game_state.equipped_weapon]["attack"], game_state.ITEMS[game_state.equipped_armor]["name"], game_state.ITEMS[game_state.equipped_armor]["defense"], int(game_state.inventory.get("potion", 0))], 15, "#d9e3f2"))
-	for id in ["wood_sword", "iron_sword", "cloth_armor", "leather_armor"]:
+	equipped.add_child(_label("Фокус: %s (+%d силы)\nБроня: %s (+%d защиты)\nЗелья: %d" % [game_state.ITEMS[game_state.equipped_focus]["name"], game_state.ITEMS[game_state.equipped_focus]["attack"], game_state.ITEMS[game_state.equipped_armor]["name"], game_state.ITEMS[game_state.equipped_armor]["defense"], int(game_state.inventory.get("potion", 0))], 15, "#d9e3f2"))
+	for id in ["focus_charm", "sun_core", "travel_cloak", "guardian_vest"]:
 		var item: Dictionary = game_state.ITEMS[id]
 		var count: int = int(game_state.inventory.get(id, 0))
 		var card := _card(page_box)
 		card.add_child(_label("%s • в наличии: %d" % [item["name"], count], 16, "#ffffff"))
-		card.add_child(_label("Атака +%d • Защита +%d • Цена: %d монет" % [item["attack"], item["defense"], item["price"]], 13, "#9aabc4"))
+		card.add_child(_label("Сила +%d • Защита +%d • Цена: %d монет" % [item["attack"], item["defense"], item["price"]], 13, "#9aabc4"))
 		if count > 0:
 			var equip_button := _button("ЭКИПИРОВАТЬ", "#28665f")
 			equip_button.pressed.connect(_equip_item.bind(id))
