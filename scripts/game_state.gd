@@ -62,6 +62,7 @@ var enemy_health: int = 0
 var player_health: int = 85
 var battle_active: bool = false
 var last_message: String = "Добро пожаловать!"
+var story_quest_stage: int = 0
 
 func _ready() -> void:
 	load_progress()
@@ -257,6 +258,52 @@ func claim_achievement(id: String) -> bool:
 	state_changed.emit()
 	return true
 
+
+func story_quest_title() -> String:
+	var titles: Array[String] = [
+		"Глава I — Следы у деревни",
+		"Глава II — Тропа в сумрачный лес",
+		"Глава III — Каменный дозор",
+		"Глава IV — Тайна затопленных руин",
+		"Глава V — Испытание болотного громилы",
+		"Глава VI — Башня древних",
+		"История завершена"
+	]
+	return titles[clampi(story_quest_stage, 0, 6)]
+
+func story_quest_description() -> String:
+	var descriptions: Array[String] = [
+		"Поговори с хранителем деревни: одолей зомби-разведчика в игровом приключении.",
+		"Разведчик оставил карту. Открой карту мира и впервые посети Сумрачный лес.",
+		"У лесной тропы стоит каменный страж. Победи его в игровом бою.",
+		"На старой карте отмечены затопленные руины. Доберись до этой локации.",
+		"Руины охраняет болотный громила. Победи его, используя игровые способности.",
+		"Последняя глава ждёт в Башне древних. Победи древнего стража — босса.",
+		"Ты раскрыл тайну древних и завершил основную историю. Спасибо за путешествие!"
+	]
+	return descriptions[clampi(story_quest_stage, 0, 6)]
+
+func story_quest_ready() -> bool:
+	match story_quest_stage:
+		0: return defeated_enemies >= 1
+		1: return visited_locations.has("forest")
+		2: return defeated_enemies >= 2
+		3: return visited_locations.has("marsh")
+		4: return defeated_enemies >= 3
+		5: return bosses_defeated >= 1
+	return false
+
+func claim_story_quest() -> bool:
+	if story_quest_stage >= 6 or not story_quest_ready():
+		return false
+	story_quest_stage += 1
+	coins += 15
+	_add_xp(10)
+	last_message = "Глава завершена: +15 монет и +10 XP."
+	save_progress()
+	state_changed.emit()
+	return true
+
 func save_progress() -> void:
 	var config := ConfigFile.new()
 	config.set_value("player", "name", player_name)
@@ -280,6 +327,7 @@ func save_progress() -> void:
 	config.set_value("equipment", "focus", equipped_focus)
 	config.set_value("equipment", "armor", equipped_armor)
 	config.set_value("player", "player_health", player_health)
+	config.set_value("story", "quest_stage", story_quest_stage)
 	config.save(SAVE_PATH)
 
 func load_progress() -> void:
@@ -307,4 +355,5 @@ func load_progress() -> void:
 	equipped_focus = str(config.get_value("equipment", "focus", equipped_focus))
 	equipped_armor = str(config.get_value("equipment", "armor", equipped_armor))
 	player_health = clampi(int(config.get_value("player", "player_health", max_health())), 0, max_health())
+	story_quest_stage = clampi(int(config.get_value("story", "quest_stage", 0)), 0, 6)
 	_refresh_day()
