@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -20,7 +19,6 @@ import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseDetector
 import com.google.mlkit.vision.pose.PoseDetectorOptions
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptionsBase
-import com.google.mlkit.vision.pose.PoseLandmark
 import org.godotengine.godot.Godot
 import org.godotengine.godot.plugin.GodotPlugin
 import org.godotengine.godot.plugin.UsedByGodot
@@ -56,7 +54,7 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
         val owner = activity as? LifecycleOwner ?: return false
 
         val options = PoseDetectorOptions.Builder()
-            .setDetectorMode(PoseDetectorOptionsBase.STREAM_MODE)
+            .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
             .build()
         detector = PoseDetection.getClient(options)
 
