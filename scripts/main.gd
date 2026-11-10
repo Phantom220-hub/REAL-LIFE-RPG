@@ -2,17 +2,32 @@ extends Control
 
 const GameStateScript = preload("res://scripts/game_state.gd")
 const CharacterPortraitScript = preload("res://scripts/character_portrait.gd")
+const OfflineCameraSessionScript = preload("res://scripts/offline_camera_session.gd")
+const ExercisePoseCounterScript = preload("res://scripts/exercise_pose_counter.gd")
 
 var game_state
 var page_box: VBoxContainer
 var level_label: Label
 var status_label: Label
 var reps_input: SpinBox
+var camera_session: Node
+var pose_counter
+var training_count_label: Label
+var training_feedback_label: Label
+var training_exercise_option: OptionButton
 
 func _ready() -> void:
 	game_state = GameStateScript.new()
 	add_child(game_state)
 	game_state.state_changed.connect(_refresh_header)
+	camera_session = OfflineCameraSessionScript.new()
+	add_child(camera_session)
+	camera_session.landmarks_received.connect(_on_camera_landmarks)
+	camera_session.camera_status_changed.connect(_on_camera_status)
+	camera_session.camera_error.connect(_on_camera_error)
+	pose_counter = ExercisePoseCounterScript.new()
+	pose_counter.repetition_counted.connect(_on_repetition_counted)
+	pose_counter.feedback_changed.connect(_on_counter_feedback)
 	_build_shell()
 	_show_page("home")
 	_refresh_header()
@@ -158,19 +173,80 @@ func _build_character() -> void:
 func _build_training() -> void:
 	game_state.refresh_daily_state()
 	page_box.add_child(_label("ТРЕНИРОВКА", 27, "#f2c66d"))
-	var card := _card(page_box)
-	card.add_child(_label("ЗАПИСЬ АКТИВНОСТИ", 17, "#ffffff"))
-	card.add_child(_label("Введи фактически выполненные повторения. Это временный ручной ввод: камера ещё не распознаёт движения.", 14, "#9aabc4"))
+	var camera_card := _card(page_box)
+	camera_card.add_child(_label("КАМЕРА • ОФЛАЙН", 17, "#f2c66d"))
+	camera_card.add_child(_label("Камера распознаёт движения на самом телефоне. Видео не отправляется в интернет и не сохраняется.", 14, "#9aabc4"))
+	training_exercise_option = OptionButton.new()
+	training_exercise_option.add_item("Приседания", 0)
+	training_exercise_option.add_item("Отжимания", 1)
+	training_exercise_option.custom_minimum_size = Vector2(220, 42)
+	camera_card.add_child(training_exercise_option)
+	training_count_label = _label("Повторения: 0", 22, "#75d5c8")
+	camera_card.add_child(training_count_label)
+	training_feedback_label = _label("Выбери упражнение и запусти камеру.", 13, "#9aabc4")
+	camera_card.add_child(training_feedback_label)
+	camera_card.add_child(_button("ЗАПУСТИТЬ КАМЕРУ", "#28665f", _start_camera_training))
+	camera_card.add_child(_button("ОСТАНОВИТЬ КАМЕРУ", "#75433c", _stop_camera_training))
+	camera_card.add_child(_button("ЗАВЕРШИТЬ И СОХРАНИТЬ СЕССИЮ", "#28665f", _submit_camera_training))
+	var manual_card := _card(page_box)
+	manual_card.add_child(_label("РУЧНОЙ ВВОД", 16, "#ffffff"))
+	manual_card.add_child(_label("Если камера недоступна, можно записать результат вручную.", 13, "#9aabc4"))
 	reps_input = SpinBox.new()
 	reps_input.min_value = 1
 	reps_input.max_value = 100
 	reps_input.value = 5
 	reps_input.step = 1
 	reps_input.custom_minimum_size = Vector2(170, 44)
-	card.add_child(reps_input)
-	card.add_child(_button("СОХРАНИТЬ РЕЗУЛЬТАТ", "#28665f", _on_workout_pressed))
-	card.add_child(_label("Сегодня записано: %d повторений\nXP за сегодня: %d / %d\nСессий всего: %d" % [game_state.daily_reps, game_state.daily_xp, game_state.DAILY_XP_CAP, game_state.total_workout_sessions], 14, "#75d5c8"))
-	card.add_child(_label("Игровой опыт ограничен дневным пределом. Отдых не снижает уровень и не сбрасывает прогресс.", 13, "#9aabc4"))
+	manual_card.add_child(reps_input)
+	manual_card.add_child(_button("СОХРАНИТЬ РЕЗУЛЬТАТ", "#263b59", _on_workout_pressed))
+	manual_card.add_child(_label("Сегодня записано: %d повторений\nXP за сегодня: %d / %d\nСессий всего: %d" % [game_state.daily_reps, game_state.daily_xp, game_state.DAILY_XP_CAP, game_state.total_workout_sessions], 14, "#75d5c8"))
+	manual_card.add_child(_label("Игровой опыт ограничен дневным пределом. Отдых остаётся полноценным выбором.", 13, "#9aabc4"))
+
+func _start_camera_training() -> void:
+	if pose_counter == null or camera_session == null:
+		return
+	pose_counter.set_exercise(0 if training_exercise_option.selected == 0 else 1)
+	training_count_label.text = "Повторения: 0"
+	camera_session.start_camera()
+
+func _stop_camera_training() -> void:
+	if camera_session != null:
+		camera_session.stop_camera()
+
+func _submit_camera_training() -> void:
+	if pose_counter == null:
+		return
+	var reps: int = int(pose_counter.total_reps)
+	camera_session.stop_camera()
+	if reps <= 0:
+		status_label.text = "Пока нет засчитанных повторений. Сессию не сохранял."
+		_show_page("training")
+		return
+	var xp_reward: int = game_state.add_workout_reps(reps)
+	var damage: int = game_state.apply_exercise_damage(reps)
+	status_label.text = "Сессия сохранена: %d повторений, +%d XP." % [reps, xp_reward]
+	if damage > 0:
+		status_label.text += " Игровой урон: %d." % damage
+	pose_counter.reset_session()
+	_show_page("training")
+
+func _on_camera_landmarks(landmarks: Array) -> void:
+	if pose_counter != null:
+		pose_counter.process_landmarks(landmarks, float(Time.get_ticks_msec()) / 1000.0)
+
+func _on_camera_status(message: String) -> void:
+	if training_feedback_label != null and is_instance_valid(training_feedback_label):
+		training_feedback_label.text = message
+
+func _on_camera_error(message: String) -> void:
+	_on_camera_status(message)
+
+func _on_repetition_counted(total: int) -> void:
+	if training_count_label != null and is_instance_valid(training_count_label):
+		training_count_label.text = "Повторения: %d" % total
+
+func _on_counter_feedback(message: String) -> void:
+	_on_camera_status(message)
 
 func _build_adventure() -> void:
 	page_box.add_child(_label("ПРИКЛЮЧЕНИЕ", 27, "#f2c66d"))
