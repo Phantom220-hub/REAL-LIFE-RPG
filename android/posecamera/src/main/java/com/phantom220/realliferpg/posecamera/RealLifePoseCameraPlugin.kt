@@ -95,8 +95,9 @@ class RealLifePoseCameraPlugin(godot: Godot) : GodotPlugin(godot) {
                         val input = InputImage.fromMediaImage(mediaImage, proxy.imageInfo.rotationDegrees)
                         activeDetector.process(input)
                             .addOnSuccessListener { pose ->
-                                val width = mediaImage.width.toFloat().coerceAtLeast(1f)
-                                val height = mediaImage.height.toFloat().coerceAtLeast(1f)
+                                val rotated = proxy.imageInfo.rotationDegrees % 180 != 0
+                                val width = (if (rotated) mediaImage.height else mediaImage.width).toFloat().coerceAtLeast(1f)
+                                val height = (if (rotated) mediaImage.width else mediaImage.height).toFloat().coerceAtLeast(1f)
                                 val next = ArrayList<HashMap<String, Any>>(33)
                                 for (index in 0..32) {
                                     val landmark = pose.getLandmark(index)
