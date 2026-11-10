@@ -178,12 +178,13 @@ func _build_adventure() -> void:
 		battle.add_child(_button("ИСПОЛЬЗОВАТЬ ЗЕЛЬЕ (%d)" % int(game_state.inventory.get("potion", 0)), "#28665f", _use_potion))
 	else:
 		page_box.add_child(_label("Выбери противника. Победа зависит от характеристик и экипировки героя.", 14, "#9aabc4"))
-		for id in ["scout", "guard", "brute"]:
+		for id in ["scout", "guard", "brute", "ancient_guardian"]:
 			var enemy: Dictionary = game_state.ENEMIES[id]
 			var card := _card(page_box)
 			card.add_child(_label(str(enemy["name"]), 18, "#ffffff"))
-			card.add_child(_label("Здоровье: %d • Атака: %d • Награда: %d монет, %d XP" % [enemy["health"], enemy["attack"], enemy["coins"], enemy["xp"]], 14, "#9aabc4"))
+			card.add_child(_label("Здоровье: %d • Сила: %d • Награда: %d монет, %d XP • Требуется уровень %d" % [enemy["health"], enemy["attack"], enemy["coins"], enemy["xp"], enemy["level"]], 14, "#9aabc4"))
 			var button := _button("НАЧАТЬ ВСТРЕЧУ", "#75433c")
+			button.disabled = game_state.level < int(enemy["level"])
 			button.pressed.connect(_start_battle.bind(id))
 			card.add_child(button)
 	var tip := _card(page_box)
@@ -314,13 +315,13 @@ func _buy_potion() -> void:
 	if game_state.coins < 12:
 		status_label.text = "Недостаточно монет."
 	else:
-	game_state.coins -= 12
-	game_state.inventory["potion"] = int(game_state.inventory.get("potion", 0)) + 1
-	game_state.last_message = "Зелье куплено."
-	game_state.save_progress()
-	game_state.state_changed.emit()
-	status_label.text = game_state.last_message
-	_show_page("inventory")
+		game_state.coins -= 12
+		game_state.inventory["potion"] = int(game_state.inventory.get("potion", 0)) + 1
+		game_state.last_message = "Зелье куплено."
+		game_state.save_progress()
+		game_state.state_changed.emit()
+		status_label.text = game_state.last_message
+		_show_page("inventory")
 
 func _claim_activity() -> void:
 	if game_state.claim_daily_choice(false):
