@@ -98,6 +98,20 @@ func add_workout_reps(reps: int) -> int:
 	state_changed.emit()
 	return reward
 
+
+func apply_exercise_damage(reps: int) -> int:
+	if not battle_active or reps <= 0:
+		return 0
+	var damage: int = clampi(reps, 1, 100)
+	enemy_health = maxi(0, enemy_health - damage)
+	if enemy_health <= 0:
+		_finish_battle()
+	else:
+		last_message = "Тренировка нанесла %d игрового урона. Противник: %d HP." % [damage, enemy_health]
+	save_progress()
+	state_changed.emit()
+	return damage
+
 func claim_daily_choice(is_rest_day: bool) -> bool:
 	_refresh_day()
 	if daily_choice_claimed:
