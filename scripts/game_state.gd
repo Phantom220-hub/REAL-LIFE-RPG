@@ -14,6 +14,22 @@ const ITEMS := {
 	"potion": {"name": "Зелье лечения", "type": "consumable", "heal": 25, "price": 12}
 }
 
+const LOCATIONS := {
+	"village": {"name": "Тихая деревня", "description": "Безопасное место, где путешественники отдыхают и готовятся к дороге.", "level": 1},
+	"forest": {"name": "Сумрачный лес", "description": "Лесная тропа, где встречаются первые стражи.", "level": 2},
+	"marsh": {"name": "Затопленные руины", "description": "Старые руины, скрытые туманом и болотной водой.", "level": 3},
+	"tower": {"name": "Башня древних", "description": "Последнее испытание хранителя башни.", "level": 5}
+}
+
+const ACHIEVEMENTS := {
+	"first_activity": {"name": "Первые шаги", "description": "Записать первую активность."},
+	"first_win": {"name": "Первый успех", "description": "Победить первого противника."},
+	"explorer": {"name": "Следопыт", "description": "Посетить три разные локации."},
+	"boss": {"name": "Хранитель побеждён", "description": "Победить древнего стража."},
+	"level_five": {"name": "Опытный путник", "description": "Достичь пятого уровня."},
+	"rest_three": {"name": "Мастер восстановления", "description": "Выбрать отдых три раза в разные дни."}
+}
+
 const ENEMIES := {
 	"scout": {"name": "Зомби-разведчик", "health": 24, "attack": 4, "coins": 8, "xp": 12, "level": 1},
 	"guard": {"name": "Каменный страж", "health": 42, "attack": 7, "coins": 15, "xp": 22, "level": 2},
@@ -27,6 +43,11 @@ var xp: int = 0
 var total_reps: int = 0
 var coins: int = 0
 var defeated_enemies: int = 0
+var bosses_defeated: int = 0
+var rest_days_total: int = 0
+var visited_locations: Array = ["village"]
+var current_location: String = "village"
+var claimed_achievements: Dictionary = {}
 var total_workout_sessions: int = 0
 var daily_xp: int = 0
 var daily_reps: int = 0
@@ -81,6 +102,8 @@ func claim_daily_choice(is_rest_day: bool) -> bool:
 		return false
 	daily_choice_claimed = true
 	daily_choice_text = "День отдыха" if is_rest_day else "Активный день"
+	if is_rest_day:
+		rest_days_total += 1
 	coins += 5
 	last_message = "Ежедневный выбор отмечен: %s. +5 монет." % daily_choice_text
 	save_progress()
@@ -129,6 +152,8 @@ func _finish_battle() -> void:
 	var enemy: Dictionary = ENEMIES[enemy_id]
 	coins += int(enemy["coins"])
 	defeated_enemies += 1
+	if enemy_id == "ancient_guardian":
+		bosses_defeated += 1
 	_add_xp(int(enemy["xp"]))
 	battle_active = false
 	last_message = "Победа над %s! +%d монет и %d XP." % [enemy["name"], enemy["coins"], enemy["xp"]]
@@ -188,6 +213,43 @@ func _refresh_day() -> void:
 		daily_choice_claimed = false
 		daily_choice_text = "Ещё не выбрано"
 
+
+func travel_to_location(id: String) -> bool:
+	if not LOCATIONS.has(id):
+		return false
+	if level < int(LOCATIONS[id]["level"]):
+		last_message = "Для этой локации нужен уровень %d." % LOCATIONS[id]["level"]
+		return false
+	current_location = id
+	if not visited_locations.has(id):
+		visited_locations.append(id)
+	last_message = "Ты прибыл: %s." % LOCATIONS[id]["name"]
+	save_progress()
+	state_changed.emit()
+	return true
+
+func is_achievement_unlocked(id: String) -> bool:
+	match id:
+		"first_activity": return total_workout_sessions >= 1
+		"first_win": return defeated_enemies >= 1
+		"explorer": return visited_locations.size() >= 3
+		"boss": return bosses_defeated >= 1
+		"level_five": return level >= 5
+		"rest_three": return rest_days_total >= 3
+	return false
+
+func claim_achievement(id: String) -> bool:
+	if not ACHIEVEMENTS.has(id) or not is_achievement_unlocked(id):
+		return false
+	if bool(claimed_achievements.get(id, false)):
+		return false
+	claimed_achievements[id] = true
+	coins += 10
+	last_message = "Достижение получено: %s. +10 монет." % ACHIEVEMENTS[id]["name"]
+	save_progress()
+	state_changed.emit()
+	return true
+
 func save_progress() -> void:
 	var config := ConfigFile.new()
 	config.set_value("player", "name", player_name)
@@ -196,6 +258,11 @@ func save_progress() -> void:
 	config.set_value("player", "total_reps", total_reps)
 	config.set_value("player", "coins", coins)
 	config.set_value("player", "defeated_enemies", defeated_enemies)
+	config.set_value("player", "bosses_defeated", bosses_defeated)
+	config.set_value("player", "rest_days_total", rest_days_total)
+	config.set_value("world", "visited_locations", visited_locations)
+	config.set_value("world", "current_location", current_location)
+	config.set_value("achievements", "claimed", claimed_achievements)
 	config.set_value("player", "total_workout_sessions", total_workout_sessions)
 	config.set_value("player", "daily_xp", daily_xp)
 	config.set_value("player", "daily_reps", daily_reps)
@@ -218,6 +285,11 @@ func load_progress() -> void:
 	total_reps = maxi(0, int(config.get_value("player", "total_reps", 0)))
 	coins = maxi(0, int(config.get_value("player", "coins", 0)))
 	defeated_enemies = maxi(0, int(config.get_value("player", "defeated_enemies", 0)))
+	bosses_defeated = maxi(0, int(config.get_value("player", "bosses_defeated", 0)))
+	rest_days_total = maxi(0, int(config.get_value("player", "rest_days_total", 0)))
+	visited_locations = config.get_value("world", "visited_locations", visited_locations)
+	current_location = str(config.get_value("world", "current_location", current_location))
+	claimed_achievements = config.get_value("achievements", "claimed", claimed_achievements)
 	total_workout_sessions = maxi(0, int(config.get_value("player", "total_workout_sessions", 0)))
 	daily_xp = clampi(int(config.get_value("player", "daily_xp", 0)), 0, DAILY_XP_CAP)
 	daily_reps = maxi(0, int(config.get_value("player", "daily_reps", 0)))
