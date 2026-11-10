@@ -29,3 +29,26 @@ jobs:
 
       - name: Run main scene headlessly
         run: Godot_v4.7.2-stable_linux.x86_64 --headless --path . --quit-after 5
+
+  build-offline-android-camera:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Compile Android pose camera AAR
+        run: gradle -p android :posecamera:assembleRelease
+      - name: Upload camera plugin AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-life-rpg-offline-camera-aar
+          path: android/posecamera/build/outputs/aar/posecamera-release.aar
+          if-no-files-found: error
