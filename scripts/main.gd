@@ -3,7 +3,7 @@ extends Control
 const GameStateScript = preload("res://scripts/game_state.gd")
 const CharacterPortraitScript = preload("res://scripts/character_portrait.gd")
 
-var game_state: Node
+var game_state
 var page_box: VBoxContainer
 var level_label: Label
 var status_label: Label
