@@ -204,6 +204,13 @@ func _add_xp(amount: int) -> void:
 		level += 1
 		player_health = max_health()
 
+func refresh_daily_state() -> void:
+	var previous_date: String = daily_date
+	_refresh_day()
+	if daily_date != previous_date:
+		save_progress()
+		state_changed.emit()
+
 func _refresh_day() -> void:
 	var today: String = Time.get_date_string_from_system()
 	if daily_date != today:
