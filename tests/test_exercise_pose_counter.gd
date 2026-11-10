@@ -30,7 +30,7 @@ func _pose(knee_angle: float) -> Array:
 	points[23] = {"x": 0.5, "y": 0.2, "confidence": 1.0}
 	points[25] = {"x": 0.5, "y": 0.5, "confidence": 1.0}
 	var radians := deg_to_rad(knee_angle)
-	points[27] = {"x": 0.5 + sin(radians), "y": 0.5 + cos(radians), "confidence": 1.0}
+	points[27] = {"x": 0.5 + sin(radians), "y": 0.5 - cos(radians), "confidence": 1.0}
 	# Mirror a valid right side so the counter can average both knees.
 	points[24] = {"x": 0.6, "y": 0.2, "confidence": 1.0}
 	points[26] = {"x": 0.6, "y": 0.5, "confidence": 1.0}
