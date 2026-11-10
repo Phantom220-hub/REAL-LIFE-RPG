@@ -11,9 +11,9 @@
 ## Prototype 0.2 — Playable systems
 - [x] Character profile and derived attributes
 - [x] Turn-based fantasy encounters with enemy health and rewards
-- [x] Enemy tiers and a level-gated boss encounter
-- [x] Inventory, equipment and a small in-game shop
-- [x] Healing items and rest-based recovery
+- [x] Enemy tiers and a level-gated fantasy boss encounter
+- [x] Inventory, equipable focus artifacts and protective clothing
+- [x] Small in-game shop and healing items
 - [x] Daily activity-or-rest choice with equal rewards
 - [x] Daily XP cap for manual activity records
 - [x] Explorable level-gated world map
@@ -36,4 +36,4 @@
 ## Important
 The current workout screen is manual input only. Do not treat it as camera recognition. Camera recognition needs a tested on-device model and Android integration; it must not upload or store video. The game must support rest days and must never reward unsafe overtraining.
 
-The core 0.2 systems have been added to source code. They are not considered fully validated until the newest Godot 4.7.2 CI run succeeds and the app is tested on a real Android device.
+The latest code has passed the headless Godot 4.7.2 validation workflow on the previous source revision. The current daily-refresh change is being checked by GitHub Actions. Real-device Android testing and export are still outstanding.
