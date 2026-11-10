@@ -25,11 +25,11 @@ func _build_interface() -> void:
 
 	var root := VBoxContainer.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.offset_left = 28
+	root.offset_top = 24
+	root.offset_right = -28
+	root.offset_bottom = -24
 	root.add_theme_constant_override("separation", 16)
-	root.add_theme_constant_override("margin_left", 28)
-	root.add_theme_constant_override("margin_right", 28)
-	root.add_theme_constant_override("margin_top", 24)
-	root.add_theme_constant_override("margin_bottom", 24)
 	add_child(root)
 
 	var header := HBoxContainer.new()
@@ -64,19 +64,19 @@ func _build_interface() -> void:
 	columns.add_child(left)
 
 	var hero_title := _make_label("ПЕРСОНАЖ", 20, "#f2c66d")
-	left.add_child(hero_title)
+	left.get_child(0).add_child(hero_title)
 	var hero := _make_label("⚔  ПУТНИК", 28, "#ffffff")
-	left.add_child(hero)
+	left.get_child(0).add_child(hero)
 	stats_label = _make_label("", 17, "#b9c9df")
-	left.add_child(stats_label)
+	left.get_child(0).add_child(stats_label)
 	xp_label = _make_label("", 16, "#75d5c8")
-	left.add_child(xp_label)
+	left.get_child(0).add_child(xp_label)
 
 	var workout_title := _make_label("ТРЕНИРОВКА", 20, "#f2c66d")
-	left.add_child(workout_title)
+	left.get_child(0).add_child(workout_title)
 	var workout_hint := _make_label("Запиши выполненные повторения. Приложение пока не проверяет их камерой.", 14, "#9aabc4")
 	workout_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	left.add_child(workout_hint)
+	left.get_child(0).add_child(workout_hint)
 
 	reps_input = SpinBox.new()
 	reps_input.min_value = 1
@@ -84,28 +84,28 @@ func _build_interface() -> void:
 	reps_input.value = 5
 	reps_input.step = 1
 	reps_input.custom_minimum_size = Vector2(150, 44)
-	left.add_child(reps_input)
+	left.get_child(0).add_child(reps_input)
 
 	var workout_button := _make_button("ЗАПИСАТЬ ТРЕНИРОВКУ", "#28665f")
 	workout_button.pressed.connect(_on_workout_pressed)
-	left.add_child(workout_button)
+	left.get_child(0).add_child(workout_button)
 
 	var right := _make_panel()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	columns.add_child(right)
 
-	right.add_child(_make_label("МИР И ПРИКЛЮЧЕНИЯ", 20, "#f2c66d"))
+	right.get_child(0).add_child(_make_label("МИР И ПРИКЛЮЧЕНИЯ", 20, "#f2c66d"))
 	enemy_label = _make_label("Зомби-разведчик\nУгроза: низкая\nНаграда: 5 монет", 19, "#d9e3f2")
-	right.add_child(enemy_label)
+	right.get_child(0).add_child(enemy_label)
 	var enemy_button := _make_button("ВСТУПИТЬ В БОЙ", "#75433c")
 	enemy_button.pressed.connect(_on_fight_pressed)
-	right.add_child(enemy_button)
+	right.get_child(0).add_child(enemy_button)
 
-	right.add_child(_make_label("ПРОГРЕСС", 20, "#f2c66d"))
+	right.get_child(0).add_child(_make_label("ПРОГРЕСС", 20, "#f2c66d"))
 	var progress_hint := _make_label("Уровень растёт за накопленный опыт. Прогресс хранится на устройстве и доступен офлайн.", 14, "#9aabc4")
 	progress_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right.add_child(progress_hint)
+	right.get_child(0).add_child(progress_hint)
 
 	status_label = _make_label("Добро пожаловать в приключение!", 15, "#75d5c8")
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
