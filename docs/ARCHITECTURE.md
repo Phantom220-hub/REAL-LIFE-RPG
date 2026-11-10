@@ -9,8 +9,8 @@
 - **UI:** responsive Control nodes created in GDScript.
 
 ## Modules
-- `scripts/game_state.gd`: player progression, attributes, turn-based fantasy encounter rules, inventory, equipment, shop, daily choice, health and local save/load.
-- `scripts/main.gd`: navigation and Home, Character, Training, Adventure, Inventory and Daily screens.
+- `scripts/game_state.gd`: player progression, attributes, fantasy encounter rules, inventory, equipment, shop, daily choice, world travel, achievements, health and local save/load.
+- `scripts/main.gd`: navigation and Home, Character, Training, Adventure, Inventory, Daily, World Map and Achievements screens.
 - `scripts/character_portrait.gd`: original procedural 2D hero portrait, drawn locally by Godot.
 - `scenes/main.tscn`: entry scene.
 - `.github/workflows/godot-check.yml`: headless import/script parse and main-scene smoke run using Godot 4.7.2.
