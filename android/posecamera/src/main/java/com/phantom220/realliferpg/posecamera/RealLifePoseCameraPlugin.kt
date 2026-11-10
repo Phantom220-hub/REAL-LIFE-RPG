@@ -18,7 +18,6 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseDetector
 import com.google.mlkit.vision.pose.PoseDetectorOptions
-import com.google.mlkit.vision.pose.defaults.PoseDetectorOptionsBase
 import org.godotengine.godot.Godot
 import org.godotengine.godot.plugin.GodotPlugin
 import org.godotengine.godot.plugin.UsedByGodot
