@@ -112,6 +112,8 @@ func _add_nav_button(parent: VBoxContainer, caption: String, page: String) -> vo
 	parent.add_child(button)
 
 func _show_page(page: String) -> void:
+	if page != "training" and camera_session != null:
+		camera_session.stop_camera()
 	for child in page_box.get_children():
 		page_box.remove_child(child)
 		child.queue_free()
